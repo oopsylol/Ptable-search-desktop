@@ -1,0 +1,249 @@
+/**
+ * 全局样式文件
+ * 定义应用的基础样式和Tailwind CSS配置
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 全局基础样式 */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Microsoft YaHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* 应用主题样式 */
+.app {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app.light {
+  background-color: #f8fafc;
+  color: #1f2937;
+}
+
+.app.dark {
+  background-color: #1f2937;
+  color: #f8fafc;
+}
+
+/* 深色主题样式 */
+.app.dark .bg-white {
+  background-color: #374151 !important;
+}
+
+.app.dark .bg-gray-50 {
+  background-color: #1f2937 !important;
+}
+
+.app.dark .bg-gray-100 {
+  background-color: #374151 !important;
+}
+
+.app.dark .text-gray-800 {
+  color: #f8fafc !important;
+}
+
+.app.dark .text-gray-700 {
+  color: #e5e7eb !important;
+}
+
+.app.dark .text-gray-600 {
+  color: #d1d5db !important;
+}
+
+.app.dark .text-gray-500 {
+  color: #9ca3af !important;
+}
+
+.app.dark .border-gray-200 {
+  border-color: #4b5563 !important;
+}
+
+.app.dark .border-gray-300 {
+  border-color: #6b7280 !important;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* 深色主题滚动条 */
+.app.dark ::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.app.dark ::-webkit-scrollbar-thumb {
+  background: #6b7280;
+}
+
+.app.dark ::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* 元素结果卡片动画 */
+.element-result {
+  animation: fadeIn 0.4s ease-out;
+}
+
+.element-result:hover {
+  transform: translateY(-2px);
+  transition: transform 0.2s ease-out;
+}
+
+/* 搜索输入框焦点效果 */
+.search-input-container input:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* 按钮悬停效果 */
+.action-buttons-container button:hover {
+  transform: translateY(-1px);
+  transition: transform 0.2s ease-out;
+}
+
+/* 设置页面动画 */
+.settings-page {
+  animation: slideIn 0.3s ease-out;
+}
+
+.setting-section {
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* 加载动画 */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .search-header {
+    padding: 1rem;
+  }
+  
+  .search-results {
+    padding: 1rem;
+  }
+  
+  .action-buttons {
+    padding: 1rem;
+  }
+  
+  .element-result {
+    padding: 1rem;
+  }
+}
+
+/* 高DPI显示优化 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .element-symbol {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* 无障碍访问优化 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 焦点可见性 */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* 打印样式 */
+@media print {
+  .action-buttons,
+  .settings-header button {
+    display: none;
+  }
+  
+  .element-result {
+    break-inside: avoid;
+    margin-bottom: 1rem;
+  }
+}

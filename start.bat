@@ -1,0 +1,6 @@
+@echo off
+echo 启动元素周期表查询应用...
+echo.
+echo 正在启动开发服务器...
+npm run dev
+pause
