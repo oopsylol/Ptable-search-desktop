@@ -1,0 +1,80 @@
+{
+  "app": {
+    "title": "Periodic Table Query",
+    "description": "Desktop application for quick chemical element information lookup"
+  },
+  "search": {
+    "placeholder": "Search elements...",
+    "noResults": "No matching elements found",
+    "searching": "Searching...",
+    "clear": "Clear"
+  },
+  "element": {
+    "atomicNumber": "Atomic Number",
+    "symbol": "Symbol",
+    "name": "Name",
+    "nameZh": "Chinese Name",
+    "atomicWeight": "Atomic Weight",
+    "category": "Category",
+    "period": "Period",
+    "group": "Group",
+    "block": "Block",
+    "electronConfiguration": "Electron Configuration",
+    "meltingPoint": "Melting Point",
+    "boilingPoint": "Boiling Point",
+    "density": "Density",
+    "discoveryYear": "Discovery Year",
+    "discoverer": "Discoverer"
+  },
+  "categories": {
+    "alkaliMetal": "Alkali Metal",
+    "alkalineEarthMetal": "Alkaline Earth Metal",
+    "transitionMetal": "Transition Metal",
+    "lanthanide": "Lanthanide",
+    "actinide": "Actinide",
+    "nonmetal": "Nonmetal",
+    "halogen": "Halogen",
+    "nobleGas": "Noble Gas",
+    "metal": "Metal",
+    "metalloid": "Metalloid"
+  },
+  "settings": {
+    "title": "Application Settings",
+    "autoHideDelay": "Auto Hide Delay (seconds)",
+    "autoHideDelayDesc": "Time before window automatically hides when inactive (1-60 seconds)",
+    "globalHotkey": "Global Hotkey",
+    "globalHotkeyDesc": "Global hotkey to show/hide application window",
+    "language": "Language",
+    "languageDesc": "Select application interface language",
+    "recording": "Recording...",
+    "record": "Record",
+    "recordingTip": "Press the key combination you want to set (must include modifier keys)",
+    "hotkeyValid": "Hotkey setting is valid",
+    "hotkeyInvalid": "Invalid hotkey format, please reset",
+    "hotkeyConflict": "This hotkey conflicts with system shortcuts and may not work properly",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saved": "Settings saved"
+  },
+  "actions": {
+    "clear": "Clear",
+    "settings": "Settings",
+    "minimize": "Minimize",
+    "close": "Close",
+    "show": "Show",
+    "hide": "Hide",
+    "quit": "Quit"
+  },
+  "tray": {
+    "show": "Show Window",
+    "settings": "Settings",
+    "quit": "Quit"
+  },
+  "messages": {
+    "loading": "Loading...",
+    "error": "Error occurred",
+    "success": "Operation successful",
+    "warning": "Warning",
+    "info": "Information"
+  }
+}

@@ -4,6 +4,14 @@
  */
 
 /**
+ * 应用设置接口
+ */
+interface AppSettings {
+  autoHideDelay?: number;
+  hotkey?: string;
+}
+
+/**
  * Electron API接口
  * 定义渲染进程可以访问的Electron功能
  */
@@ -12,19 +20,32 @@ interface ElectronAPI {
    * 最小化到托盘
    * 将应用窗口最小化到系统托盘
    */
-  minimizeToTray: () => Promise<void>;
+  minimizeToTray: () => void;
 
   /**
-   * 获取应用设置
-   * 从主进程获取当前的应用设置
+   * 更新应用设置
+   * 将设置更新发送到主进程
+   * @param settings - 设置对象
    */
-  getSettings: () => Promise<any>;
+  updateSettings: (settings: AppSettings) => void;
 
   /**
-   * 保存应用设置
-   * 将设置保存到主进程
+   * 监听显示设置消息
+   * @param callback - 回调函数
    */
-  saveSettings: (settings: any) => Promise<void>;
+  onShowSettings: (callback: () => void) => void;
+
+  /**
+   * 监听清空搜索消息
+   * @param callback - 回调函数
+   */
+  onClearSearch: (callback: () => void) => void;
+
+  /**
+   * 移除所有监听器
+   * @param channel - 消息通道
+   */
+  removeAllListeners: (channel: string) => void;
 
   /**
    * 获取应用版本信息

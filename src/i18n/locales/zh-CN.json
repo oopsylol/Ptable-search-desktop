@@ -1,0 +1,80 @@
+{
+  "app": {
+    "title": "元素周期表查询",
+    "description": "快速查询化学元素信息的桌面应用"
+  },
+  "search": {
+    "placeholder": "搜索元素...",
+    "noResults": "没有找到匹配的元素",
+    "searching": "搜索中...",
+    "clear": "清空"
+  },
+  "element": {
+    "atomicNumber": "原子序数",
+    "symbol": "元素符号",
+    "name": "元素名称",
+    "nameZh": "中文名称",
+    "atomicWeight": "原子量",
+    "category": "元素类别",
+    "period": "周期",
+    "group": "族",
+    "block": "区块",
+    "electronConfiguration": "电子构型",
+    "meltingPoint": "熔点",
+    "boilingPoint": "沸点",
+    "density": "密度",
+    "discoveryYear": "发现年份",
+    "discoverer": "发现者"
+  },
+  "categories": {
+    "alkaliMetal": "碱金属",
+    "alkalineEarthMetal": "碱土金属",
+    "transitionMetal": "过渡金属",
+    "lanthanide": "镧系元素",
+    "actinide": "锕系元素",
+    "nonmetal": "非金属",
+    "halogen": "卤素",
+    "nobleGas": "稀有气体",
+    "metal": "金属",
+    "metalloid": "类金属"
+  },
+  "settings": {
+    "title": "应用设置",
+    "autoHideDelay": "自动隐藏时间（秒）",
+    "autoHideDelayDesc": "窗口在无操作后自动隐藏的时间（1-60秒）",
+    "globalHotkey": "全局快捷键",
+    "globalHotkeyDesc": "用于显示/隐藏应用窗口的全局快捷键",
+    "language": "语言",
+    "languageDesc": "选择应用界面语言",
+    "recording": "录制中...",
+    "record": "录制",
+    "recordingTip": "请按下您想要设置的快捷键组合（需要包含修饰键）",
+    "hotkeyValid": "快捷键设置有效",
+    "hotkeyInvalid": "快捷键格式无效，请重新设置",
+    "hotkeyConflict": "该快捷键与系统快捷键冲突，可能无法正常工作",
+    "save": "保存",
+    "cancel": "取消",
+    "saved": "设置已保存"
+  },
+  "actions": {
+    "clear": "清空",
+    "settings": "设置",
+    "minimize": "最小化",
+    "close": "关闭",
+    "show": "显示",
+    "hide": "隐藏",
+    "quit": "退出"
+  },
+  "tray": {
+    "show": "显示窗口",
+    "settings": "设置",
+    "quit": "退出"
+  },
+  "messages": {
+    "loading": "加载中...",
+    "error": "发生错误",
+    "success": "操作成功",
+    "warning": "警告",
+    "info": "提示"
+  }
+}

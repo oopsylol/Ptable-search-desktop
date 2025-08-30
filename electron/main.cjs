@@ -6,20 +6,6 @@ const { app, BrowserWindow, Tray, Menu, globalShortcut, ipcMain, nativeImage } =
 const path = require('path');
 const isDev = process.env.NODE_ENV === 'development';
 
-// 设置控制台输出编码为UTF-8，解决中文乱码问题
-if (process.platform === 'win32') {
-  // 在Windows上设置控制台代码页为UTF-8
-  process.env.CHCP = '65001';
-  // 重写console.log以确保正确的编码输出
-  const originalLog = console.log;
-  console.log = (...args) => {
-    const message = args.map(arg => 
-      typeof arg === 'string' ? Buffer.from(arg, 'utf8').toString('utf8') : arg
-    );
-    originalLog.apply(console, message);
-  };
-}
-
 /**
  * 应用类
  * 管理Electron应用的生命周期和功能
@@ -29,7 +15,6 @@ class PTableApp {
     this.mainWindow = null;
     this.tray = null;
     this.isQuitting = false;
-    this.currentHotkey = null; // 当前注册的快捷键
     
     this.initializeApp();
   }
@@ -83,15 +68,15 @@ class PTableApp {
       // 创建浏览器窗口
       this.mainWindow = new BrowserWindow({
           width: 340,
-          height: 400, // 增加初始高度以显示搜索结果
+          height: 120,
           minWidth: 340,
           minHeight: 120,
           maxWidth: 340,
-          maxHeight: 800, // 允许搜索结果展开时增加高度
+          maxHeight: 550, // 允许搜索结果展开时增加高度
           show: false, // 初始时不显示窗口
           frame: false, // 隐藏窗口边框和标题栏
           autoHideMenuBar: true, // 隐藏菜单栏
-        resizable: true, // 允许调整大小以适应搜索结果
+        resizable: false, // 禁止调整大小
         titleBarStyle: 'hidden', // 隐藏标题栏
         frame: false, // 无边框窗口
         transparent: true, // 透明窗口
@@ -121,18 +106,18 @@ class PTableApp {
       
       // 加载应用内容
       if (isDev) {
-        console.log('[开发模式] 加载 http://localhost:3000');
+        console.log('🚀 开发模式：加载 http://localhost:3000');
         this.mainWindow.loadURL('http://localhost:3000');
         // 开发模式下始终打开开发者工具
         this.mainWindow.webContents.openDevTools({ mode: 'detach' });
       } else {
-        console.log('[生产模式] 加载本地文件');
+        console.log('📦 生产模式：加载本地文件');
         this.mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
       }
       
       // 页面加载完成后的处理
       this.mainWindow.webContents.once('did-finish-load', () => {
-        console.log('[页面加载完成]');
+        console.log('✅ 页面加载完成');
         // 注入调试脚本
         this.injectDebugScript();
       });
@@ -198,17 +183,17 @@ class PTableApp {
     
     // 监听页面开始加载
     webContents.on('did-start-loading', () => {
-      console.log('[页面开始加载]');
+      console.log('🔄 页面开始加载...');
     });
     
     // 监听页面加载完成
     webContents.on('did-finish-load', () => {
-      console.log('[页面加载完成]');
+      console.log('✅ 页面加载完成');
     });
     
     // 监听页面加载失败
     webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
-      console.error('[页面加载失败]', {
+      console.error('❌ 页面加载失败:', {
         errorCode,
         errorDescription,
         url: validatedURL
@@ -217,9 +202,9 @@ class PTableApp {
     
     // 监听资源加载
     webContents.session.webRequest.onBeforeRequest((details, callback) => {
-      console.log('[资源请求]', details.url);
+      console.log('📥 请求资源:', details.url);
       if (details.url.includes('.css')) {
-        console.log('[CSS请求]', details.url);
+        console.log('🎨 CSS文件请求:', details.url);
       }
       callback({});
     });
@@ -227,7 +212,7 @@ class PTableApp {
     // 监听资源加载完成
     webContents.session.webRequest.onCompleted((details) => {
       if (details.url.includes('.css')) {
-        console.log('[CSS加载完成]', {
+        console.log('✅ CSS文件加载完成:', {
           url: details.url,
           statusCode: details.statusCode,
           responseHeaders: details.responseHeaders
@@ -237,12 +222,12 @@ class PTableApp {
     
     // 监听资源加载错误
     webContents.session.webRequest.onErrorOccurred((details) => {
-      console.error('[资源加载错误]', {
+      console.error('❌ 资源加载错误:', {
         url: details.url,
         error: details.error
       });
       if (details.url.includes('.css')) {
-        console.error('[CSS加载失败]', details.url);
+        console.error('🚨 CSS文件加载失败:', details.url);
       }
     });
     
@@ -264,25 +249,25 @@ class PTableApp {
     if (!this.mainWindow) return;
     
     const debugScript = `
-      console.log('[开始CSS调试检查]');
+      console.log('🔍 开始CSS调试检查...');
       
       // 检查所有link标签
       const linkTags = document.querySelectorAll('link[rel="stylesheet"]');
-      console.log('[找到CSS链接]', linkTags.length, '个:');
+      console.log('📋 找到', linkTags.length, '个CSS链接:');
       linkTags.forEach((link, index) => {
         console.log(\`  \${index + 1}. \${link.href}\`);
         
         // 检查CSS是否加载成功
         if (link.sheet) {
-          console.log('    [CSS样式表已加载] 规则数量:', link.sheet.cssRules ? link.sheet.cssRules.length : '无法访问');
+          console.log('    ✅ CSS样式表已加载，规则数量:', link.sheet.cssRules ? link.sheet.cssRules.length : '无法访问');
         } else {
-          console.log('    [CSS样式表未加载]');
+          console.log('    ❌ CSS样式表未加载');
         }
       });
       
       // 检查style标签
       const styleTags = document.querySelectorAll('style');
-      console.log('[找到内联样式标签]', styleTags.length, '个');
+      console.log('📋 找到', styleTags.length, '个内联样式标签');
       styleTags.forEach((style, index) => {
         console.log(\`  \${index + 1}. 内容长度: \${style.textContent.length} 字符\`);
       });
@@ -294,15 +279,15 @@ class PTableApp {
       
       setTimeout(() => {
         const computedStyle = window.getComputedStyle(testElement);
-        console.log('[Tailwind CSS测试]');
+        console.log('🎨 Tailwind CSS测试:');
         console.log('  背景色:', computedStyle.backgroundColor);
         console.log('  内边距:', computedStyle.padding);
         console.log('  圆角:', computedStyle.borderRadius);
         
         if (computedStyle.backgroundColor === 'rgba(0, 0, 0, 0)' || computedStyle.backgroundColor === 'transparent') {
-          console.error('[Tailwind CSS可能未正确加载]');
+          console.error('🚨 Tailwind CSS可能未正确加载！');
         } else {
-          console.log('[Tailwind CSS正常工作]');
+          console.log('✅ Tailwind CSS正常工作');
         }
         
         document.body.removeChild(testElement);
@@ -311,17 +296,17 @@ class PTableApp {
       // 检查网络请求
       const originalFetch = window.fetch;
       window.fetch = function(...args) {
-        console.log('[Fetch请求]:', args[0]);
+        console.log('🌐 Fetch请求:', args[0]);
         return originalFetch.apply(this, args);
       };
     `;
     
     this.mainWindow.webContents.executeJavaScript(debugScript)
       .then(() => {
-        console.log('[调试脚本注入成功]');
+        console.log('✅ 调试脚本注入成功');
       })
       .catch((error) => {
-        console.error('[调试脚本注入失败]', error);
+        console.error('❌ 调试脚本注入失败:', error);
       });
   }
 
@@ -490,85 +475,19 @@ class PTableApp {
     try {
       const settings = this.getSettings();
       const hotkey = settings.hotkey || 'Ctrl+Shift+E';
-      this.currentHotkey = hotkey;
 
       const success = globalShortcut.register(hotkey, () => {
         this.toggleWindow();
       });
 
       if (success) {
-        console.log('[全局快捷键注册成功]', hotkey);
+        console.log(`Global shortcut ${hotkey} registered successfully`);
       } else {
-        console.warn('[全局快捷键注册失败]', hotkey);
+        console.warn(`Global shortcut ${hotkey} registration failed`);
       }
     } catch (error) {
-      console.error('[注册全局快捷键失败]', error);
+      console.error('注册全局快捷键失败:', error);
     }
-  }
-
-  /**
-   * 更新全局快捷键
-   * 动态更新快捷键设置
-   * @param {string} newHotkey - 新的快捷键
-   */
-  updateHotkey(newHotkey) {
-    try {
-      // 验证快捷键格式
-      if (!this.isValidHotkey(newHotkey)) {
-        console.error('[快捷键格式无效]', newHotkey);
-        return false;
-      }
-
-      // 注销当前快捷键
-      if (this.currentHotkey) {
-        globalShortcut.unregister(this.currentHotkey);
-        console.log('[已注销快捷键]', this.currentHotkey);
-      }
-
-      // 注册新快捷键
-      const success = globalShortcut.register(newHotkey, () => {
-        this.toggleWindow();
-      });
-
-      if (success) {
-        this.currentHotkey = newHotkey;
-        console.log('[快捷键更新成功]', newHotkey);
-        return true;
-      } else {
-        console.warn('[快捷键注册失败]', newHotkey);
-        // 如果新快捷键注册失败，尝试恢复原快捷键
-        if (this.currentHotkey) {
-          globalShortcut.register(this.currentHotkey, () => {
-            this.toggleWindow();
-          });
-        }
-        return false;
-      }
-    } catch (error) {
-      console.error('[更新快捷键失败]', error);
-      return false;
-    }
-  }
-
-  /**
-   * 验证快捷键格式
-   * @param {string} hotkey - 快捷键字符串
-   * @returns {boolean} 是否有效
-   */
-  isValidHotkey(hotkey) {
-    if (!hotkey || typeof hotkey !== 'string') {
-      return false;
-    }
-
-    const parts = hotkey.split('+');
-    if (parts.length < 2) {
-      return false;
-    }
-
-    const modifiers = ['Ctrl', 'Alt', 'Shift', 'Meta', 'Cmd', 'Command'];
-    const hasModifier = parts.some(part => modifiers.includes(part));
-
-    return hasModifier;
   }
 
   /**
@@ -589,14 +508,10 @@ class PTableApp {
         try {
           if (settings.autoHideDelay) {
             this.autoHideDelay = settings.autoHideDelay;
-            console.log('[自动隐藏时间已更新]', this.autoHideDelay / 1000, '秒');
-          }
-          
-          if (settings.hotkey) {
-            this.updateHotkey(settings.hotkey);
+            console.log('自动隐藏时间已更新为:', this.autoHideDelay / 1000, '秒');
           }
         } catch (error) {
-          console.error('[更新设置失败]', error);
+          console.error('更新设置失败:', error);
         }
       });
 

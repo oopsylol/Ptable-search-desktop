@@ -1,237 +1,368 @@
 /**
  * 设置页面组件
- * 提供用户偏好设置和配置选项
+ * 允许用户配置应用设置，如自动隐藏时间和快捷键
  */
-import React, { useState } from 'react';
-import { UserSettings } from '../types';
-
-/**
- * 设置页面属性接口
- */
-interface SettingsPageProps {
-  /** 当前设置 */
-  settings: UserSettings;
-  /** 设置变更回调 */
-  onSettingsChange: (settings: Partial<UserSettings>) => void;
-  /** 返回上一页回调 */
-  onNavigateBack: () => void;
-}
+import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { supportedLanguages, changeLanguage, getCurrentLanguage } from '../i18n';
 
 /**
  * 设置页面组件
- * 管理应用的各种配置选项
  */
-const SettingsPage: React.FC<SettingsPageProps> = ({
-  settings,
-  onSettingsChange,
-  onNavigateBack
-}) => {
-  // 本地设置状态
-  const [localSettings, setLocalSettings] = useState<UserSettings>(settings);
+const SettingsPage: React.FC = () => {
+  const { t } = useTranslation();
+  const [autoHideDelay, setAutoHideDelay] = useState<number>(10); // 默认10秒
+  const [hotkey, setHotkey] = useState<string>('Ctrl+Shift+E'); // 默认快捷键
+  const [isRecording, setIsRecording] = useState<boolean>(false); // 是否正在录制快捷键
+  const [currentLanguage, setCurrentLanguage] = useState<string>(getCurrentLanguage()); // 当前语言
+  const [isVisible, setIsVisible] = useState<boolean>(false);
 
   /**
-   * 处理设置项变更
+   * 组件挂载时加载设置
    */
-  const handleSettingChange = <K extends keyof UserSettings>(
-    key: K,
-    value: UserSettings[K]
-  ): void => {
-    const newSettings = { ...localSettings, [key]: value };
-    setLocalSettings(newSettings);
-    onSettingsChange({ [key]: value });
-  };
+  useEffect(() => {
+    // 从本地存储加载设置
+    const savedDelay = localStorage.getItem('autoHideDelay');
+    if (savedDelay) {
+      setAutoHideDelay(parseInt(savedDelay));
+    }
+    
+    const savedHotkey = localStorage.getItem('hotkey');
+    if (savedHotkey) {
+      setHotkey(savedHotkey);
+    }
 
-  /**
-   * 处理窗口大小变更
-   */
-  const handleWindowSizeChange = (dimension: 'width' | 'height', value: number): void => {
-    const newWindowSize = {
-      ...localSettings.window_size,
-      [dimension]: value
+    // 监听显示设置的消息
+    const handleShowSettings = () => {
+      setIsVisible(true);
     };
-    handleSettingChange('window_size', newWindowSize);
-  };
 
-  /**
-   * 重置为默认设置
-   */
-  const handleResetToDefaults = (): void => {
-    const defaultSettings: UserSettings = {
-      start_minimized: true,
-      theme: 'light',
-      hotkey: 'Ctrl+Shift+E',
-      show_atomic_weight: true,
-      show_category: true,
-      window_size: {
-        width: 400,
-        height: 300
+    // 添加事件监听器
+    if (window.electronAPI) {
+      window.electronAPI.onShowSettings(handleShowSettings);
+    }
+
+    return () => {
+      // 清理事件监听器
+      if (window.electronAPI && window.electronAPI.removeAllListeners) {
+        window.electronAPI.removeAllListeners('show-settings');
       }
     };
-    
-    setLocalSettings(defaultSettings);
-    onSettingsChange(defaultSettings);
+  }, []);
+
+  /**
+   * 保存设置
+   */
+  const saveSettings = () => {
+    try {
+      // 保存到本地存储
+      localStorage.setItem('autoHideDelay', autoHideDelay.toString());
+      localStorage.setItem('hotkey', hotkey);
+      
+      // 通知主进程更新设置
+      if (window.electronAPI) {
+        window.electronAPI.updateSettings({ 
+          autoHideDelay: autoHideDelay * 1000,
+          hotkey: hotkey
+        });
+      }
+      
+      // 隐藏设置页面
+      setIsVisible(false);
+      
+      console.log('设置已保存');
+    } catch (error) {
+      console.error('保存设置失败:', error);
+    }
   };
 
+  /**
+   * 取消设置
+   */
+  const cancelSettings = () => {
+    // 重置为保存的值
+    const savedDelay = localStorage.getItem('autoHideDelay');
+    if (savedDelay) {
+      setAutoHideDelay(parseInt(savedDelay));
+    } else {
+      setAutoHideDelay(10);
+    }
+    
+    const savedHotkey = localStorage.getItem('hotkey');
+    if (savedHotkey) {
+      setHotkey(savedHotkey);
+    } else {
+      setHotkey('Ctrl+Shift+E');
+    }
+    
+    setIsRecording(false);
+    setIsVisible(false);
+  };
+
+  /**
+   * 处理自动隐藏时间变化
+   * @param e - 输入事件
+   */
+  const handleDelayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    if (value >= 1 && value <= 60) {
+      setAutoHideDelay(value);
+    }
+  };
+
+  /**
+   * 处理语言切换
+   * @param e - 选择事件
+   */
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newLanguage = e.target.value;
+    setCurrentLanguage(newLanguage);
+    changeLanguage(newLanguage);
+  };
+
+  /**
+   * 开始录制快捷键
+   */
+  const startRecording = () => {
+    setIsRecording(true);
+    setHotkey(t('settings.recordingTip'));
+  };
+
+  /**
+   * 处理快捷键录制
+   * @param e - 键盘事件
+   */
+  const handleHotkeyRecord = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!isRecording) return;
+    
+    e.preventDefault();
+    
+    const keys: string[] = [];
+    
+    // 检查修饰键
+    if (e.ctrlKey) keys.push('Ctrl');
+    if (e.altKey) keys.push('Alt');
+    if (e.shiftKey) keys.push('Shift');
+    if (e.metaKey) keys.push('Meta');
+    
+    // 检查主键
+    if (e.key && !['Control', 'Alt', 'Shift', 'Meta'].includes(e.key)) {
+      const mainKey = e.key.length === 1 ? e.key.toUpperCase() : e.key;
+      keys.push(mainKey);
+      
+      // 只有在有修饰键和主键的情况下才设置快捷键
+      if (keys.length >= 2) {
+        const hotkeyString = keys.join('+');
+        setHotkey(hotkeyString);
+        setIsRecording(false);
+      }
+    }
+  };
+
+  /**
+   * 验证快捷键格式
+   * @param hotkey - 快捷键字符串
+   * @returns 是否有效
+   */
+  const isValidHotkey = (hotkey: string): boolean => {
+    if (hotkey === t('settings.recordingTip')) return false;
+    
+    const parts = hotkey.split('+');
+    if (parts.length < 2) return false;
+    
+    const modifiers = ['Ctrl', 'Alt', 'Shift', 'Meta'];
+    const hasModifier = parts.some(part => modifiers.includes(part));
+    
+    return hasModifier;
+  };
+
+  /**
+   * 检查快捷键冲突
+   * @param hotkey - 快捷键字符串
+   * @returns 冲突信息
+   */
+  const checkHotkeyConflict = (hotkey: string): { hasConflict: boolean; message?: string } => {
+    // 常见的系统快捷键列表
+    const systemHotkeys = [
+      'Ctrl+C', 'Ctrl+V', 'Ctrl+X', 'Ctrl+Z', 'Ctrl+Y',
+      'Ctrl+A', 'Ctrl+S', 'Ctrl+O', 'Ctrl+N', 'Ctrl+P',
+      'Ctrl+F', 'Ctrl+H', 'Ctrl+R', 'Ctrl+T', 'Ctrl+W',
+      'Alt+F4', 'Alt+Tab', 'Ctrl+Alt+Del', 'Ctrl+Shift+Esc',
+      'Meta+L', 'Meta+R', 'Meta+D', 'Meta+E', 'Meta+Tab'
+    ];
+
+    // 检查是否与系统快捷键冲突
+    if (systemHotkeys.includes(hotkey)) {
+      return {
+        hasConflict: true,
+        message: t('settings.hotkeyConflict')
+      };
+    }
+
+    // 检查是否为单个修饰键（无效）
+    const singleModifiers = ['Ctrl', 'Alt', 'Shift', 'Meta'];
+    if (singleModifiers.includes(hotkey)) {
+      return {
+        hasConflict: true,
+        message: t('settings.hotkeyInvalid')
+      };
+    }
+
+    return { hasConflict: false };
+  };
+
+  /**
+   * 获取快捷键状态信息
+   * @param hotkey - 快捷键字符串
+   * @returns 状态信息
+   */
+  const getHotkeyStatus = (hotkey: string) => {
+    if (hotkey === t('settings.recordingTip')) {
+      return { isValid: false, message: '', color: 'text-gray-400' };
+    }
+
+    if (!isValidHotkey(hotkey)) {
+      return { 
+        isValid: false, 
+        message: t('settings.hotkeyInvalid'), 
+        color: 'text-red-400' 
+      };
+    }
+
+    const conflict = checkHotkeyConflict(hotkey);
+    if (conflict.hasConflict) {
+      return { 
+        isValid: true, 
+        message: conflict.message, 
+        color: 'text-yellow-400' 
+      };
+    }
+
+    return { 
+      isValid: true, 
+      message: t('settings.hotkeyValid'), 
+      color: 'text-green-400' 
+    };
+  };
+
+  if (!isVisible) {
+    return null;
+  }
+
   return (
-    <div className="settings-page min-h-screen bg-gray-50">
-      {/* 头部 */}
-      <div className="settings-header bg-white shadow-sm p-6">
-        <div className="max-w-md mx-auto flex items-center">
-          <button
-            onClick={onNavigateBack}
-            className="mr-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-            title="返回搜索页面"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-          <h1 className="text-2xl font-bold text-gray-800">应用设置</h1>
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-gray-800 rounded-lg border border-gray-600 shadow-2xl p-6 w-[300px]">
+        {/* 标题 */}
+        <div className="text-center mb-6">
+          <h2 className="text-lg font-bold text-white mb-2">{t('settings.title')}</h2>
+          <div className="w-12 h-0.5 bg-blue-500 mx-auto"></div>
         </div>
-      </div>
 
-      {/* 设置内容 */}
-      <div className="settings-content p-6">
-        <div className="max-w-md mx-auto space-y-6">
-          
-          {/* 启动设置 */}
-          <div className="setting-section bg-white rounded-lg p-4 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">启动设置</h3>
-            
-            <div className="setting-item flex items-center justify-between">
-              <div>
-                <label className="text-gray-700 font-medium">启动时最小化</label>
-                <p className="text-sm text-gray-500">应用启动后自动最小化到系统托盘</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={localSettings.start_minimized}
-                  onChange={(e) => handleSettingChange('start_minimized', e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
+        {/* 设置项 */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              {t('settings.language')}
+            </label>
+            <select
+              value={currentLanguage}
+              onChange={handleLanguageChange}
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500 transition-colors"
+            >
+              {supportedLanguages.map((lang) => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.name}
+                </option>
+              ))}
+            </select>
+            <div className="text-xs text-gray-400 mt-1">
+              {t('settings.languageDesc')}
             </div>
           </div>
 
-          {/* 界面设置 */}
-          <div className="setting-section bg-white rounded-lg p-4 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">界面设置</h3>
-            
-            {/* 主题选择 */}
-            <div className="setting-item mb-4">
-              <label className="block text-gray-700 font-medium mb-2">界面主题</label>
-              <select
-                value={localSettings.theme}
-                onChange={(e) => handleSettingChange('theme', e.target.value as 'light' | 'dark')}
-                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="light">浅色主题</option>
-                <option value="dark">深色主题</option>
-              </select>
-            </div>
-
-            {/* 窗口大小 */}
-            <div className="setting-item">
-              <label className="block text-gray-700 font-medium mb-2">窗口大小</label>
-              <div className="flex space-x-4">
-                <div className="flex-1">
-                  <label className="block text-sm text-gray-500 mb-1">宽度</label>
-                  <input
-                    type="number"
-                    min="300"
-                    max="800"
-                    value={localSettings.window_size.width}
-                    onChange={(e) => handleWindowSizeChange('width', parseInt(e.target.value))}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-                <div className="flex-1">
-                  <label className="block text-sm text-gray-500 mb-1">高度</label>
-                  <input
-                    type="number"
-                    min="200"
-                    max="600"
-                    value={localSettings.window_size.height}
-                    onChange={(e) => handleWindowSizeChange('height', parseInt(e.target.value))}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              {t('settings.autoHideDelay')}
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                min="1"
+                max="60"
+                value={autoHideDelay}
+                onChange={handleDelayChange}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500 transition-colors"
+              />
+              <div className="absolute right-3 top-2 text-gray-400 text-sm pointer-events-none">
+                {t('settings.autoHideDelay').includes('秒') ? '秒' : 's'}
               </div>
+            </div>
+            <div className="text-xs text-gray-400 mt-1">
+              {t('settings.autoHideDelayDesc')}
             </div>
           </div>
 
-          {/* 显示设置 */}
-          <div className="setting-section bg-white rounded-lg p-4 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">显示设置</h3>
-            
-            <div className="space-y-4">
-              <div className="setting-item flex items-center justify-between">
-                <div>
-                  <label className="text-gray-700 font-medium">显示原子量</label>
-                  <p className="text-sm text-gray-500">在搜索结果中显示元素的原子量</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={localSettings.show_atomic_weight}
-                    onChange={(e) => handleSettingChange('show_atomic_weight', e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
-
-              <div className="setting-item flex items-center justify-between">
-                <div>
-                  <label className="text-gray-700 font-medium">显示元素类别</label>
-                  <p className="text-sm text-gray-500">在搜索结果中显示元素的类别标签</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={localSettings.show_category}
-                    onChange={(e) => handleSettingChange('show_category', e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          {/* 快捷键设置 */}
-          <div className="setting-section bg-white rounded-lg p-4 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">快捷键设置</h3>
-            
-            <div className="setting-item">
-              <label className="block text-gray-700 font-medium mb-2">全局快捷键</label>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              {t('settings.globalHotkey')}
+            </label>
+            <div className="relative">
               <input
                 type="text"
-                value={localSettings.hotkey}
-                onChange={(e) => handleSettingChange('hotkey', e.target.value)}
-                placeholder="例如: Ctrl+Shift+E"
-                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={hotkey}
+                onKeyDown={handleHotkeyRecord}
+                readOnly={!isRecording}
+                className={`w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500 transition-colors ${
+                  isRecording ? 'border-blue-500 bg-blue-900/20' : ''
+                } ${
+                  !isValidHotkey(hotkey) && !isRecording ? 'border-red-500' : ''
+                }`}
+                placeholder={t('settings.globalHotkeyDesc')}
               />
-              <p className="text-sm text-gray-500 mt-1">用于快速显示/隐藏应用窗口</p>
+              <button
+                type="button"
+                onClick={startRecording}
+                disabled={isRecording}
+                className={`absolute right-2 top-1 px-2 py-1 text-xs rounded transition-colors ${
+                  isRecording 
+                    ? 'bg-blue-600 text-white cursor-not-allowed' 
+                    : 'bg-gray-600 hover:bg-gray-500 text-gray-200'
+                }`}
+              >
+                {isRecording ? t('settings.recording') : t('settings.record')}
+              </button>
             </div>
+            <div className="text-xs text-gray-400 mt-1">
+               {isRecording 
+                 ? t('settings.recordingTip') 
+                 : t('settings.globalHotkeyDesc')
+               }
+             </div>
+             {!isRecording && (() => {
+               const status = getHotkeyStatus(hotkey);
+               return status.message && (
+                 <div className={`text-xs mt-1 ${status.color}`}>
+                   {status.message}
+                 </div>
+               );
+             })()}
           </div>
+        </div>
 
-          {/* 重置按钮 */}
-          <div className="setting-section">
-            <button
-              onClick={handleResetToDefaults}
-              className="w-full bg-red-500 text-white py-3 px-4 rounded-lg hover:bg-red-600 transition-colors duration-200 font-medium"
-            >
-              重置为默认设置
-            </button>
-          </div>
+        {/* 按钮组 */}
+        <div className="flex space-x-3 mt-6">
+          <button
+            onClick={cancelSettings}
+            className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors duration-200 text-sm font-medium"
+          >
+            {t('settings.cancel')}
+          </button>
+          <button
+            onClick={saveSettings}
+            className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors duration-200 text-sm font-medium"
+          >
+            {t('settings.save')}
+          </button>
         </div>
       </div>
     </div>

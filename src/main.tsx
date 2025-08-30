@@ -6,6 +6,8 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
+import './i18n'; // 初始化国际化
+import { loadLanguageFromStorage } from './i18n';
 
 /**
  * 应用初始化函数
@@ -13,6 +15,9 @@ import './index.css';
  */
 function initializeApp(): void {
   try {
+    // 加载保存的语言设置
+    loadLanguageFromStorage();
+    
     const rootElement = document.getElementById('root');
     if (!rootElement) {
       throw new Error('Root element not found');

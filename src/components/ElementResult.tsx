@@ -52,7 +52,7 @@ const ElementResult: React.FC<ElementResultProps> = ({ element, settings, onCopy
   };
 
   return (
-    <div className="element-result bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow duration-200">
+    <div className="element-result bg-white rounded-lg shadow-md p-8 border border-gray-200 hover:shadow-lg transition-shadow duration-200 min-h-[200px]">
       {/* 元素符号和基本信息 */}
       <div className="element-header flex items-center justify-between mb-4">
         <div className="element-symbol-section flex items-center space-x-4">

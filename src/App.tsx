@@ -1,103 +1,46 @@
 /**
  * 主应用组件
- * 管理应用的整体布局和路由
+ * 管理应用的整体状态和路由
  */
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import SearchPage from './pages/SearchPage';
 import SettingsPage from './pages/SettingsPage';
-import { UserSettings } from './types';
-
-/**
- * 应用页面类型
- */
-type PageType = 'search' | 'settings';
 
 /**
  * 主应用组件
  * 负责页面路由和全局状态管理
  */
 const App: React.FC = () => {
-  // 当前页面状态
-  const [currentPage, setCurrentPage] = useState<PageType>('search');
-  
-  // 用户设置状态
-  const [settings, setSettings] = useState<UserSettings>({
-    start_minimized: true,
-    theme: 'light',
-    hotkey: 'Ctrl+Shift+E',
-    show_atomic_weight: true,
-    show_category: true,
-    window_size: {
-      width: 400,
-      height: 300
-    }
-  });
+  const searchPageRef = useRef<{ clearSearch: () => void }>(null);
 
   /**
-   * 加载用户设置
-   * 从本地存储或默认配置加载设置
+   * 组件挂载时设置事件监听器
    */
   useEffect(() => {
-    try {
-      const savedSettings = localStorage.getItem('ptable-settings');
-      if (savedSettings) {
-        const parsedSettings = JSON.parse(savedSettings);
-        setSettings(prev => ({ ...prev, ...parsedSettings }));
+    // 监听清空搜索的消息
+    const handleClearSearch = () => {
+      if (searchPageRef.current) {
+        searchPageRef.current.clearSearch();
       }
-    } catch (error) {
-      console.error('加载设置失败:', error);
+    };
+
+    // 添加事件监听器
+    if (window.electronAPI) {
+      window.electronAPI.onClearSearch(handleClearSearch);
     }
+
+    return () => {
+      // 清理事件监听器
+      if (window.electronAPI && window.electronAPI.removeAllListeners) {
+        window.electronAPI.removeAllListeners('clear-search');
+      }
+    };
   }, []);
 
-  /**
-   * 保存用户设置
-   * 将设置保存到本地存储
-   */
-  const saveSettings = (newSettings: Partial<UserSettings>): void => {
-    try {
-      const updatedSettings = { ...settings, ...newSettings };
-      setSettings(updatedSettings);
-      localStorage.setItem('ptable-settings', JSON.stringify(updatedSettings));
-    } catch (error) {
-      console.error('保存设置失败:', error);
-    }
-  };
-
-  /**
-   * 页面切换处理函数
-   */
-  const handlePageChange = (page: PageType): void => {
-    setCurrentPage(page);
-  };
-
-  /**
-   * 渲染当前页面
-   */
-  const renderCurrentPage = (): React.ReactNode => {
-    switch (currentPage) {
-      case 'search':
-        return (
-          <SearchPage 
-            settings={settings}
-            onNavigateToSettings={() => handlePageChange('settings')}
-          />
-        );
-      case 'settings':
-        return (
-          <SettingsPage 
-            settings={settings}
-            onSettingsChange={saveSettings}
-            onNavigateBack={() => handlePageChange('search')}
-          />
-        );
-      default:
-        return <SearchPage settings={settings} onNavigateToSettings={() => handlePageChange('settings')} />;
-    }
-  };
-
   return (
-    <div className={`app ${settings.theme}`}>
-      {renderCurrentPage()}
+    <div className="app w-full h-screen bg-transparent">
+      <SearchPage ref={searchPageRef} />
+      <SettingsPage />
     </div>
   );
 };

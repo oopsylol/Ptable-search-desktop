@@ -1,64 +1,82 @@
 /**
  * Electron预加载脚本
- * 在渲染进程中安全地暴露Electron API
+ * 在渲染进程中安全地暴露Node.js API
  */
 const { contextBridge, ipcRenderer } = require('electron');
 
 /**
- * 暴露给渲染进程的API
- * 通过contextBridge安全地暴露功能
+ * 向渲染进程暴露安全的API
  */
 contextBridge.exposeInMainWorld('electronAPI', {
   /**
-   * 最小化到托盘
-   * 将应用窗口最小化到系统托盘
+   * 最小化窗口到系统托盘
    */
   minimizeToTray: () => {
-    return ipcRenderer.invoke('minimize-to-tray');
+    ipcRenderer.send('minimize-to-tray');
   },
 
   /**
-   * 获取应用设置
-   * 从主进程获取当前的应用设置
+   * 更新应用设置
+   * @param {Object} settings - 设置对象
    */
-  getSettings: () => {
-    return ipcRenderer.invoke('get-settings');
+  updateSettings: (settings) => {
+    ipcRenderer.send('update-settings', settings);
   },
 
   /**
-   * 保存应用设置
-   * 将设置保存到主进程
+   * 监听显示设置消息
+   * @param {Function} callback - 回调函数
    */
-  saveSettings: (settings) => {
-    return ipcRenderer.invoke('save-settings', settings);
+  onShowSettings: (callback) => {
+    ipcRenderer.on('show-settings', callback);
+  },
+
+  /**
+   * 监听清空搜索消息
+   * @param {Function} callback - 回调函数
+   */
+  onClearSearch: (callback) => {
+    ipcRenderer.on('clear-search', callback);
+  },
+
+  /**
+   * 移除所有监听器
+   * @param {string} channel - 消息通道
+   */
+  removeAllListeners: (channel) => {
+    ipcRenderer.removeAllListeners(channel);
   },
 
   /**
    * 获取应用版本信息
-   * 返回应用的版本和构建信息
    */
-  getAppInfo: () => {
-    return {
-      name: 'PTable',
-      version: '1.0.0',
-      description: '元素周期表查询工具'
-    };
+  getAppVersion: () => {
+    return ipcRenderer.invoke('get-app-version');
   },
 
   /**
-   * 检查是否在Electron环境中运行
-   * 用于区分Electron和浏览器环境
+   * 获取系统信息
    */
-  isElectron: () => {
-    return true;
+  getSystemInfo: () => {
+    return ipcRenderer.invoke('get-system-info');
   },
 
   /**
-   * 获取平台信息
-   * 返回当前运行的操作系统平台
+   * 监听主进程消息
+   * @param {string} channel - 消息通道
+   * @param {Function} callback - 回调函数
    */
-  getPlatform: () => {
-    return process.platform;
+  onMessage: (channel, callback) => {
+    ipcRenderer.on(channel, callback);
+  },
+
+  /**
+   * 移除消息监听器
+   * @param {string} channel - 消息通道
+   * @param {Function} callback - 回调函数
+   */
+  removeListener: (channel, callback) => {
+    ipcRenderer.removeListener(channel, callback);
   }
 });
 

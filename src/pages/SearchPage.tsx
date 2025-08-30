@@ -1,12 +1,20 @@
 /**
  * 极简搜索页面组件
- * 提供极简的元素搜索界面，只显示输入框和搜索结果
+ * 只显示一个200x40px的美化搜索框
  */
-import React, { useState, useEffect, useCallback } from 'react';
-import { elements } from '../data/elements';
-import { Element } from '../types/element';
+import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
+import { useTranslation } from 'react-i18next';
+import { elements, Element } from '../data/elements';
 
-const SearchPage: React.FC = () => {
+/**
+ * SearchPage组件的ref接口
+ */
+export interface SearchPageRef {
+  clearSearch: () => void;
+}
+
+const SearchPage = forwardRef<SearchPageRef>((props, ref) => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [searchResults, setSearchResults] = useState<Element[]>([]);
   const [isInputFocused, setIsInputFocused] = useState<boolean>(false);
@@ -26,7 +34,7 @@ const SearchPage: React.FC = () => {
     const results = elements.filter(element => {
       // 按名称搜索（中文和英文）
       if (element.name.toLowerCase().includes(lowerQuery) ||
-          element.nameZh.includes(lowerQuery)) {
+          element.nameZh.toLowerCase().includes(lowerQuery)) {
         return true;
       }
       
@@ -77,47 +85,94 @@ const SearchPage: React.FC = () => {
     setIsInputFocused(false);
   };
 
+  /**
+   * 处理元素卡片点击
+   * @param element - 被点击的元素
+   */
+  const handleElementClick = (element: Element) => {
+    console.log('点击了元素:', element);
+    // 这里可以添加更多的点击处理逻辑
+  };
+
+  /**
+   * 清空搜索内容
+   */
+  const clearSearch = useCallback(() => {
+    setSearchQuery('');
+    setSearchResults([]);
+  }, []);
+
+  /**
+   * 根据元素类别获取背景颜色
+   * @param category - 元素类别
+   * @returns 背景颜色类名
+   */
+  const getCategoryColor = (category: string): string => {
+    const colorMap: { [key: string]: string } = {
+      '碱金属': 'bg-red-500',
+      '碱土金属': 'bg-orange-500',
+      '过渡金属': 'bg-blue-500',
+      '镧系元素': 'bg-green-500',
+      '锕系元素': 'bg-purple-500',
+      '非金属': 'bg-yellow-500',
+      '卤素': 'bg-teal-500',
+      '稀有气体': 'bg-indigo-500',
+      '金属': 'bg-gray-500',
+      '类金属': 'bg-pink-500'
+    };
+    return colorMap[category] || 'bg-gray-500';
+  };
+
+  /**
+   * 暴露给父组件的方法
+   */
+  useImperativeHandle(ref, () => ({
+    clearSearch
+  }), [clearSearch]);
+
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-start pt-20 px-4">
-      {/* 极简输入框 */}
-      <div className="w-full max-w-md mb-6">
+    <div className="w-full h-full flex items-center justify-center bg-transparent">
+      {/* 极简美化搜索框 - 200x40px */}
+      <div className="relative">
         <input
           type="text"
           value={searchQuery}
           onChange={handleSearchChange}
           onFocus={handleInputFocus}
           onBlur={handleInputBlur}
-          placeholder={searchQuery === '' && searchResults.length === 0 && !isInputFocused ? "没有该元素" : "搜索元素..."}
-          className={`w-full px-4 py-3 text-lg text-white bg-gray-800 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 transition-all duration-300 ${
-            !isInputFocused && searchQuery === '' ? 'opacity-50' : 'opacity-100'
+          placeholder={t('search.placeholder')}
+          className={`w-[300px] h-20 px-6 text-lg bg-gray-800 border-2 border-gray-600 rounded-full focus:outline-none focus:border-blue-400 focus:shadow-lg transition-all duration-300 text-center hover:shadow-md ${
+            searchQuery && searchResults.length === 0 ? 'text-red-400' : 'text-white'
+          } ${
+            !isInputFocused && searchQuery === '' ? 'opacity-60' : 'opacity-100'
           }`}
         />
-      </div>
-
-      {/* 搜索结果 - 100x100 元素卡片 */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 w-full max-w-6xl">
-        {searchResults.map((element) => (
-          <div
-            key={element.atomicNumber}
-            className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex flex-col items-center justify-center text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer"
-            title={`${element.nameZh} (${element.name}) - 原子序数: ${element.atomicNumber}`}
-          >
-            <div className="text-xs font-medium mb-1">{element.atomicNumber}</div>
-            <div className="text-xl font-bold mb-1">{element.symbol}</div>
-            <div className="text-xs text-center leading-tight">{element.nameZh}</div>
+        
+        {/* 搜索结果显示为正方形卡片网格 */}
+        {searchResults.length > 0 && (
+          <div className="absolute top-full left-0 mt-3 w-[300px] max-h-[400px] overflow-y-auto z-50 p-4">
+            <div className="grid grid-cols-4 gap-3">
+              {searchResults.map((element) => (
+                <div
+                  key={element.atomicNumber}
+                  className={`w-20 h-20 ${getCategoryColor(element.category)} rounded-xl flex flex-col items-center justify-center text-white font-bold cursor-pointer transform hover:scale-110 transition-all duration-300 hover:shadow-xl shadow-lg border border-white/20`}
+                  onClick={() => handleElementClick(element)}
+                >
+                  <div className="text-xs opacity-90 font-medium">{element.atomicNumber}</div>
+                  <div className="text-lg font-bold">{element.symbol}</div>
+                  <div className="text-xs opacity-90 truncate w-full text-center font-medium">{element.nameZh}</div>
+                </div>
+              ))}
+            </div>
           </div>
-        ))}
-      </div>
+        )}
+        
 
-      {/* 无结果提示 */}
-      {searchQuery && searchResults.length === 0 && (
-        <div className="text-gray-400 text-center mt-8">
-          <div className="text-lg">没有找到匹配的元素</div>
-          <div className="text-sm mt-2">请尝试输入元素名称、符号或原子序数</div>
-        </div>
-      )}
+      </div>
     </div>
   );
-};
+});
+
+SearchPage.displayName = 'SearchPage';
 
 export default SearchPage;

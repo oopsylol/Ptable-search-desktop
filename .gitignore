@@ -47,6 +47,18 @@ coverage/
 # Electron
 out/
 app/
+dist-electron/
+*.exe
+*.dmg
+*.AppImage
+*.deb
+*.rpm
+*.snap
+*.tar.gz
+*.zip
+
+# Electron Builder
+release/
 
 # Temporary folders
 tmp/

@@ -1,5 +1,5 @@
 /**
- * Tailwind CSS配置文件
+ * Tailwind CSS v3配置文件
  * 配置Tailwind CSS的内容路径和主题
  */
 /** @type {import('tailwindcss').Config} */

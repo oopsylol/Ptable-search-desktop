@@ -8,10 +8,14 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "electron": "electron .",
+    "electron": "cross-env NODE_ENV=development electron .",
     "electron-dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
     "electron-build": "npm run build && electron .",
     "dist": "npm run build && electron-builder",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:linux": "npm run build && electron-builder --linux",
+    "pack": "npm run build && electron-builder --dir",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -28,17 +32,71 @@
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.2",
     "autoprefixer": "^10.4.21",
+    "i18next": "^25.4.2",
     "postcss": "^8.5.6",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-i18next": "^15.7.3",
     "tailwindcss": "^4.1.12",
     "typescript": "^5.9.2",
     "vite": "^7.1.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.12",
+    "autoprefixer": "^10.4.21",
     "concurrently": "^9.2.1",
+    "cross-env": "^10.0.0",
     "electron": "^37.4.0",
+    "electron-builder": "^26.0.12",
+    "tailwindcss": "^3.4.17",
     "wait-on": "^8.0.4"
+  },
+  "build": {
+    "appId": "com.ptable.desktop",
+    "productName": "元素周期表查询",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "assets",
+        "to": "assets"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.png",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "元素周期表查询"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.png",
+      "category": "public.app-category.education"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png",
+      "category": "Education"
+    }
   }
 }
