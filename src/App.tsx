@@ -4,7 +4,7 @@
  */
 import React, { useEffect, useRef } from 'react';
 import SearchPage from './pages/SearchPage';
-import SettingsPage from './pages/SettingsPage';
+import SimpleSettingsPage from './pages/SimpleSettingsPage';
 
 /**
  * 主应用组件
@@ -40,7 +40,7 @@ const App: React.FC = () => {
   return (
     <div className="app w-full h-screen bg-transparent">
       <SearchPage ref={searchPageRef} />
-      <SettingsPage />
+      <SimpleSettingsPage />
     </div>
   );
 };

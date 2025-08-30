@@ -73,3 +73,9 @@ temp/
 *.njsproj
 *.sln
 *.sw?
+
+# Trae AI configuration
+.trae/
+
+# Vercel deployment configuration
+.vercel/

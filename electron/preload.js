@@ -77,6 +77,20 @@ contextBridge.exposeInMainWorld('electronAPI', {
    */
   removeListener: (channel, callback) => {
     ipcRenderer.removeListener(channel, callback);
+  },
+
+  /**
+   * 关闭设置窗口
+   */
+  closeSettingsWindow: () => {
+    ipcRenderer.send('close-settings-window');
+  },
+
+  /**
+   * 显示设置窗口
+   */
+  showSettings: () => {
+    ipcRenderer.send('show-settings-window');
   }
 });
 

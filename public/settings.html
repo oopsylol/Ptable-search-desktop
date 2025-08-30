@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>应用设置 - 元素周期表查询</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .settings-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .settings-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .settings-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .settings-subtitle {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e1e5e9;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus, .form-select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .form-description {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .toggle-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 50px;
+      height: 24px;
+      background: #ccc;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .toggle-switch.active {
+      background: #667eea;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    .toggle-switch.active .toggle-slider {
+      transform: translateX(26px);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5a6fd8;
+    }
+
+    .btn-secondary {
+      background: #f8f9fa;
+      color: #666;
+      border: 1px solid #e1e5e9;
+    }
+
+    .btn-secondary:hover {
+      background: #e9ecef;
+    }
+
+    .hotkey-input {
+      position: relative;
+    }
+
+    .hotkey-record-btn {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .hotkey-record-btn:hover {
+      background: #5a6fd8;
+    }
+
+    .hotkey-record-btn.recording {
+      background: #dc3545;
+    }
+  </style>
+</head>
+<body>
+  <div class="settings-container">
+    <div class="settings-header">
+      <h1 class="settings-title">应用设置</h1>
+      <p class="settings-subtitle">配置您的元素周期表查询应用</p>
+    </div>
+
+    <form id="settingsForm">
+      <div class="form-group">
+        <label class="form-label">语言</label>
+        <select class="form-select" id="language">
+          <option value="zh-CN">中文</option>
+          <option value="en-US">English</option>
+        </select>
+        <div class="form-description">选择应用界面语言</div>
+      </div>
+
+      <div class="form-group">
+        <div class="toggle-container">
+          <div>
+            <label class="form-label">开机启动</label>
+            <div class="form-description">系统启动时自动运行应用程序</div>
+          </div>
+          <div class="toggle-switch" id="autoStartToggle">
+            <div class="toggle-slider"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">自动隐藏时间（秒）</label>
+        <input type="number" class="form-input" id="autoHideDelay" min="1" max="60" value="10">
+        <div class="form-description">窗口在无操作后自动隐藏的时间（1-60秒）</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">全局快捷键</label>
+        <div class="hotkey-input">
+          <input type="text" class="form-input" id="hotkey" value="Ctrl+Shift+E" readonly>
+          <button type="button" class="hotkey-record-btn" id="recordBtn">录制</button>
+        </div>
+        <div class="form-description">用于显示/隐藏应用窗口的全局快捷键</div>
+      </div>
+
+      <div class="button-group">
+        <button type="button" class="btn btn-secondary" id="cancelBtn">取消</button>
+        <button type="submit" class="btn btn-primary" id="saveBtn">保存</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // 设置数据
+    let settings = {
+      language: 'zh-CN',
+      autoStart: false,
+      autoHideDelay: 10,
+      hotkey: 'Ctrl+Shift+E'
+    };
+
+    let isRecording = false;
+
+    // DOM 元素
+    const languageSelect = document.getElementById('language');
+    const autoStartToggle = document.getElementById('autoStartToggle');
+    const autoHideDelayInput = document.getElementById('autoHideDelay');
+    const hotkeyInput = document.getElementById('hotkey');
+    const recordBtn = document.getElementById('recordBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const settingsForm = document.getElementById('settingsForm');
+
+    // 初始化设置
+    function initializeSettings() {
+      // 从本地存储加载设置
+      const savedSettings = localStorage.getItem('ptable-settings');
+      if (savedSettings) {
+        settings = { ...settings, ...JSON.parse(savedSettings) };
+      }
+
+      // 更新UI
+      languageSelect.value = settings.language;
+      autoHideDelayInput.value = settings.autoHideDelay;
+      hotkeyInput.value = settings.hotkey;
+      
+      if (settings.autoStart) {
+        autoStartToggle.classList.add('active');
+      }
+    }
+
+    // 开机启动切换
+    autoStartToggle.addEventListener('click', () => {
+      autoStartToggle.classList.toggle('active');
+      settings.autoStart = autoStartToggle.classList.contains('active');
+    });
+
+    // 快捷键录制
+    recordBtn.addEventListener('click', () => {
+      if (isRecording) return;
+      
+      isRecording = true;
+      recordBtn.textContent = '录制中...';
+      recordBtn.classList.add('recording');
+      hotkeyInput.value = '请按下快捷键组合...';
+      
+      // 监听键盘事件
+      document.addEventListener('keydown', handleHotkeyRecord);
+    });
+
+    // 处理快捷键录制
+    function handleHotkeyRecord(event) {
+      if (!isRecording) return;
+      
+      event.preventDefault();
+      
+      const keys = [];
+      
+      if (event.ctrlKey) keys.push('Ctrl');
+      if (event.altKey) keys.push('Alt');
+      if (event.shiftKey) keys.push('Shift');
+      if (event.metaKey) keys.push('Meta');
+      
+      if (event.key && !['Control', 'Alt', 'Shift', 'Meta'].includes(event.key)) {
+        const mainKey = event.key.length === 1 ? event.key.toUpperCase() : event.key;
+        keys.push(mainKey);
+        
+        if (keys.length >= 2) {
+          const hotkeyString = keys.join('+');
+          settings.hotkey = hotkeyString;
+          hotkeyInput.value = hotkeyString;
+          
+          // 停止录制
+          isRecording = false;
+          recordBtn.textContent = '录制';
+          recordBtn.classList.remove('recording');
+          document.removeEventListener('keydown', handleHotkeyRecord);
+        }
+      }
+    }
+
+    // 保存设置
+    settingsForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      
+      settings.language = languageSelect.value;
+      settings.autoHideDelay = parseInt(autoHideDelayInput.value);
+      
+      // 保存到本地存储
+      localStorage.setItem('ptable-settings', JSON.stringify(settings));
+      
+      // 通知主进程更新设置
+      if (window.electronAPI) {
+        window.electronAPI.updateSettings({
+          autoHideDelay: settings.autoHideDelay * 1000,
+          hotkey: settings.hotkey,
+          autoStart: settings.autoStart,
+          language: settings.language
+        });
+      }
+      
+      // 关闭窗口
+      if (window.electronAPI) {
+        window.electronAPI.closeSettingsWindow();
+      } else {
+        window.close();
+      }
+    });
+
+    // 取消按钮
+    cancelBtn.addEventListener('click', () => {
+      if (window.electronAPI) {
+        window.electronAPI.closeSettingsWindow();
+      } else {
+        window.close();
+      }
+    });
+
+    // 初始化
+    initializeSettings();
+  </script>
+</body>
+</html>

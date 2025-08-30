@@ -3,7 +3,6 @@
  * 只显示一个200x40px的美化搜索框
  */
 import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
-import { useTranslation } from 'react-i18next';
 import { elements, Element } from '../data/elements';
 
 /**
@@ -14,7 +13,6 @@ export interface SearchPageRef {
 }
 
 const SearchPage = forwardRef<SearchPageRef>((props, ref) => {
-  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [searchResults, setSearchResults] = useState<Element[]>([]);
   const [isInputFocused, setIsInputFocused] = useState<boolean>(false);
@@ -86,12 +84,47 @@ const SearchPage = forwardRef<SearchPageRef>((props, ref) => {
   };
 
   /**
-   * 处理元素卡片点击
+   * 处理元素卡片点击 - 复制元素信息到剪贴板
    * @param element - 被点击的元素
    */
-  const handleElementClick = (element: Element) => {
-    console.log('点击了元素:', element);
-    // 这里可以添加更多的点击处理逻辑
+  const handleElementClick = async (element: Element) => {
+    try {
+      // 构建要复制的元素信息
+      const elementInfo = `元素信息：
+原子序数：${element.atomicNumber}
+元素符号：${element.symbol}
+中文名称：${element.nameZh}
+英文名称：${element.name}
+元素类别：${element.category || '未知'}`;
+      
+      // 复制到剪贴板
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(elementInfo);
+        console.log('元素信息已复制到剪贴板:', element.symbol);
+        
+        // 简单的视觉反馈 - 可以考虑添加toast提示
+        const clickedElement = document.activeElement as HTMLElement;
+        if (clickedElement) {
+          const originalTransform = clickedElement.style.transform;
+          clickedElement.style.transform = 'scale(0.95)';
+          setTimeout(() => {
+            clickedElement.style.transform = originalTransform;
+          }, 150);
+        }
+      } else {
+        // 降级方案：使用传统的复制方法
+        const textArea = document.createElement('textarea');
+        textArea.value = elementInfo;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        console.log('元素信息已复制到剪贴板（降级方案）:', element.symbol);
+      }
+    } catch (error) {
+      console.error('复制到剪贴板失败:', error);
+      // 可以在这里添加错误提示
+    }
   };
 
   /**
@@ -140,7 +173,7 @@ const SearchPage = forwardRef<SearchPageRef>((props, ref) => {
           onChange={handleSearchChange}
           onFocus={handleInputFocus}
           onBlur={handleInputBlur}
-          placeholder={t('search.placeholder')}
+          placeholder="搜索元素..."
           className={`w-[300px] h-20 px-6 text-lg bg-gray-800 border-2 border-gray-600 rounded-full focus:outline-none focus:border-blue-400 focus:shadow-lg transition-all duration-300 text-center hover:shadow-md ${
             searchQuery && searchResults.length === 0 ? 'text-red-400' : 'text-white'
           } ${
@@ -167,6 +200,7 @@ const SearchPage = forwardRef<SearchPageRef>((props, ref) => {
           </div>
         )}
         
+
 
       </div>
     </div>

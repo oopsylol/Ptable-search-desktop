@@ -47,12 +47,17 @@ const SettingsPage: React.FC = () => {
     // 添加事件监听器
     if (window.electronAPI) {
       window.electronAPI.onShowSettings(handleShowSettings);
+    } else {
+      // 在浏览器中监听自定义事件
+      window.addEventListener('show-settings', handleShowSettings);
     }
 
     return () => {
       // 清理事件监听器
       if (window.electronAPI && window.electronAPI.removeAllListeners) {
         window.electronAPI.removeAllListeners('show-settings');
+      } else {
+        window.removeEventListener('show-settings', handleShowSettings);
       }
     };
   }, []);
@@ -275,15 +280,26 @@ const SettingsPage: React.FC = () => {
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg border border-gray-600 shadow-2xl p-6 w-[300px]">
+      <div className="bg-gray-800 rounded-lg border border-gray-600 shadow-2xl p-4 w-[280px] relative">
+        {/* 关闭按钮 */}
+        <button
+          onClick={cancelSettings}
+          className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 rounded-full transition-colors duration-200"
+          title="关闭设置"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        
         {/* 标题 */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-4">
           <h2 className="text-lg font-bold text-white mb-2">{t('settings.title')}</h2>
           <div className="w-12 h-0.5 bg-blue-500 mx-auto"></div>
         </div>
 
         {/* 设置项 */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               {t('settings.language')}
@@ -398,7 +414,7 @@ const SettingsPage: React.FC = () => {
         </div>
 
         {/* 按钮组 */}
-        <div className="flex space-x-3 mt-6">
+        <div className="flex space-x-3 mt-4">
           <button
             onClick={cancelSettings}
             className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors duration-200 text-sm font-medium"
