@@ -52,6 +52,8 @@
     "hotkeyValid": "Hotkey setting is valid",
     "hotkeyInvalid": "Invalid hotkey format, please reset",
     "hotkeyConflict": "This hotkey conflicts with system shortcuts and may not work properly",
+    "autoStart": "Auto Start",
+    "autoStartDesc": "Automatically run the application when system starts",
     "save": "Save",
     "cancel": "Cancel",
     "saved": "Settings saved"

@@ -16,6 +16,7 @@ const SettingsPage: React.FC = () => {
   const [isRecording, setIsRecording] = useState<boolean>(false); // 是否正在录制快捷键
   const [currentLanguage, setCurrentLanguage] = useState<string>(getCurrentLanguage()); // 当前语言
   const [isVisible, setIsVisible] = useState<boolean>(false);
+  const [autoStart, setAutoStart] = useState<boolean>(false); // 开机启动状态
 
   /**
    * 组件挂载时加载设置
@@ -30,6 +31,12 @@ const SettingsPage: React.FC = () => {
     const savedHotkey = localStorage.getItem('hotkey');
     if (savedHotkey) {
       setHotkey(savedHotkey);
+    }
+
+    // 从本地存储加载开机启动设置
+    const savedAutoStart = localStorage.getItem('autoStart');
+    if (savedAutoStart) {
+      setAutoStart(savedAutoStart === 'true');
     }
 
     // 监听显示设置的消息
@@ -58,12 +65,14 @@ const SettingsPage: React.FC = () => {
       // 保存到本地存储
       localStorage.setItem('autoHideDelay', autoHideDelay.toString());
       localStorage.setItem('hotkey', hotkey);
+      localStorage.setItem('autoStart', autoStart.toString());
       
       // 通知主进程更新设置
       if (window.electronAPI) {
         window.electronAPI.updateSettings({ 
           autoHideDelay: autoHideDelay * 1000,
-          hotkey: hotkey
+          hotkey: hotkey,
+          autoStart: autoStart
         });
       }
       
@@ -95,6 +104,13 @@ const SettingsPage: React.FC = () => {
       setHotkey('Ctrl+Shift+E');
     }
     
+    const savedAutoStart = localStorage.getItem('autoStart');
+    if (savedAutoStart) {
+      setAutoStart(savedAutoStart === 'true');
+    } else {
+      setAutoStart(false);
+    }
+    
     setIsRecording(false);
     setIsVisible(false);
   };
@@ -118,6 +134,14 @@ const SettingsPage: React.FC = () => {
     const newLanguage = e.target.value;
     setCurrentLanguage(newLanguage);
     changeLanguage(newLanguage);
+  };
+
+  /**
+   * 处理开机启动开关变化
+   * @param e - 复选框事件
+   */
+  const handleAutoStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAutoStart(e.target.checked);
   };
 
   /**
@@ -277,6 +301,30 @@ const SettingsPage: React.FC = () => {
             </select>
             <div className="text-xs text-gray-400 mt-1">
               {t('settings.languageDesc')}
+            </div>
+          </div>
+
+          <div>
+            <label className="flex items-center justify-between text-sm font-medium text-gray-300 mb-2">
+              <span>{t('settings.autoStart')}</span>
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  checked={autoStart}
+                  onChange={handleAutoStartChange}
+                  className="sr-only"
+                />
+                <div className={`w-11 h-6 rounded-full transition-colors duration-200 ease-in-out ${
+                  autoStart ? 'bg-blue-600' : 'bg-gray-600'
+                }`}>
+                  <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                    autoStart ? 'translate-x-5' : 'translate-x-0.5'
+                  } mt-0.5`}></div>
+                </div>
+              </div>
+            </label>
+            <div className="text-xs text-gray-400 mt-1">
+              {t('settings.autoStartDesc')}
             </div>
           </div>
 

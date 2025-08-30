@@ -4,6 +4,7 @@
  */
 const { app, BrowserWindow, Tray, Menu, globalShortcut, ipcMain, nativeImage } = require('electron');
 const path = require('path');
+const AutoLaunch = require('auto-launch');
 const isDev = process.env.NODE_ENV === 'development';
 
 /**
@@ -15,6 +16,13 @@ class PTableApp {
     this.mainWindow = null;
     this.tray = null;
     this.isQuitting = false;
+    
+    // 初始化开机启动
+    this.autoLauncher = new AutoLaunch({
+      name: 'Periodic Table Query',
+      path: process.execPath,
+      isHidden: true // 启动时隐藏窗口
+    });
     
     this.initializeApp();
   }
@@ -510,6 +518,11 @@ class PTableApp {
             this.autoHideDelay = settings.autoHideDelay;
             console.log('自动隐藏时间已更新为:', this.autoHideDelay / 1000, '秒');
           }
+          
+          // 处理开机启动设置
+          if (typeof settings.autoStart === 'boolean') {
+            this.setAutoStart(settings.autoStart);
+          }
         } catch (error) {
           console.error('更新设置失败:', error);
         }
@@ -600,6 +613,39 @@ class PTableApp {
     } catch {
       // 如果图标文件不存在，创建一个简单的图标
       return nativeImage.createEmpty();
+    }
+  }
+
+  /**
+   * 设置开机启动
+   * @param {boolean} enable - 是否启用开机启动
+   */
+  async setAutoStart(enable) {
+    try {
+      const isEnabled = await this.autoLauncher.isEnabled();
+      
+      if (enable && !isEnabled) {
+        await this.autoLauncher.enable();
+        console.log('✅ 开机启动已启用');
+      } else if (!enable && isEnabled) {
+        await this.autoLauncher.disable();
+        console.log('❌ 开机启动已禁用');
+      }
+    } catch (error) {
+      console.error('设置开机启动失败:', error);
+    }
+  }
+
+  /**
+   * 检查开机启动状态
+   * @returns {Promise<boolean>} 开机启动是否启用
+   */
+  async getAutoStartStatus() {
+    try {
+      return await this.autoLauncher.isEnabled();
+    } catch (error) {
+      console.error('获取开机启动状态失败:', error);
+      return false;
     }
   }
 

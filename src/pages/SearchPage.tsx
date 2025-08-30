@@ -155,7 +155,7 @@ const SearchPage = forwardRef<SearchPageRef>((props, ref) => {
               {searchResults.map((element) => (
                 <div
                   key={element.atomicNumber}
-                  className={`w-20 h-20 ${getCategoryColor(element.category)} rounded-xl flex flex-col items-center justify-center text-white font-bold cursor-pointer transform hover:scale-110 transition-all duration-300 hover:shadow-xl shadow-lg border border-white/20`}
+                  className={`w-20 h-20 ${getCategoryColor(element.category || '')} rounded-xl flex flex-col items-center justify-center text-white font-bold cursor-pointer transform hover:scale-110 transition-all duration-300 hover:shadow-xl shadow-lg border border-white/20`}
                   onClick={() => handleElementClick(element)}
                 >
                   <div className="text-xs opacity-90 font-medium">{element.atomicNumber}</div>

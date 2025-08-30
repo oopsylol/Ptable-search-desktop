@@ -9,6 +9,7 @@
 interface AppSettings {
   autoHideDelay?: number;
   hotkey?: string;
+  autoStart?: boolean;
 }
 
 /**

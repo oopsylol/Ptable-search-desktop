@@ -52,6 +52,8 @@
     "hotkeyValid": "快捷键设置有效",
     "hotkeyInvalid": "快捷键格式无效，请重新设置",
     "hotkeyConflict": "该快捷键与系统快捷键冲突，可能无法正常工作",
+    "autoStart": "开机启动",
+    "autoStartDesc": "系统启动时自动运行应用程序",
     "save": "保存",
     "cancel": "取消",
     "saved": "设置已保存"
