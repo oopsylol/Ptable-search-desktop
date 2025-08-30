@@ -54,7 +54,7 @@
   },
   "build": {
     "appId": "com.ptable.desktop",
-    "productName": "元素周期表查询",
+    "productName": "PTable",
     "directories": {
       "output": "dist-electron"
     },
@@ -62,7 +62,16 @@
       "dist/**/*",
       "electron/**/*",
       "assets/**/*",
-      "package.json"
+      "package.json",
+      "!**/node_modules/**/*",
+      "!**/.git/**/*",
+      "!**/src/**/*",
+      "!**/.trae/**/*",
+      "!**/README.md",
+      "!**/tsconfig.json",
+      "!**/vite.config.ts",
+      "!**/tailwind.config.js",
+      "!**/postcss.config.js"
     ],
     "extraResources": [
       {
@@ -70,6 +79,12 @@
         "to": "assets"
       }
     ],
+    "compression": "maximum",
+    "removePackageScripts": true,
+    "removePackageKeywords": true,
+    "asar": {
+      "smartUnpack": true
+    },
     "win": {
       "target": [
         {
@@ -77,17 +92,30 @@
           "arch": [
             "x64"
           ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "assets/icon.png",
-      "requestedExecutionLevel": "asInvoker"
+      "requestedExecutionLevel": "asInvoker",
+      "compression": "maximum",
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
+      "allowElevation": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "元素周期表查询"
+      "shortcutName": "PTable",
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true,
+      "artifactName": "${productName}-Setup-${version}.${ext}",
+      "differentialPackage": false
     },
     "mac": {
       "target": "dmg",
