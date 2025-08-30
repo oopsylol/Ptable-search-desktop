@@ -108,12 +108,6 @@
     "win": {
       "target": [
         {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
           "target": "portable",
           "arch": [
             "x64"
@@ -124,18 +118,6 @@
       "requestedExecutionLevel": "asInvoker",
       "compression": "maximum",
       "artifactName": "${productName}-${version}-${arch}.${ext}"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "allowElevation": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "PTable",
-      "deleteAppDataOnUninstall": false,
-      "runAfterFinish": true,
-      "artifactName": "${productName}-Setup-${version}.${ext}",
-      "differentialPackage": false
     },
     "mac": {
       "target": "dmg",
